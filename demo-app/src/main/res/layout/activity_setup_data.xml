@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.SetupDataActivity">
+
+    <data>
+
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/fab_margin">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_description"
+                android:layout_gravity="center_horizontal"
+                android:textSize="@dimen/text_size_30dp"
+                android:textStyle="bold"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/gateway_url" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/model_name" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/text_input_edit_text_model_version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/model_version"
+                android:textAlignment="center"
+                android:inputType="text"/>
+
+            <Button
+                android:id="@+id/button_start_federate_training"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/start_federation_training" />
+        </LinearLayout>
+    </FrameLayout>
+</layout>

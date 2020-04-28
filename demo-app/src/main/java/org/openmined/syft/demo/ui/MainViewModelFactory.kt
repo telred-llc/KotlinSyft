@@ -14,7 +14,8 @@ class MainViewModelFactory(
     private val mnistDataRepository: MNISTDataRepository,
     private val networkSchedulers: ProcessSchedulers,
     private val computeSchedulers: ProcessSchedulers,
-    private val localConfiguration: LocalConfiguration
+    private val localConfiguration: LocalConfiguration,
+    private val modelVersion : String
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
@@ -24,7 +25,8 @@ class MainViewModelFactory(
             mnistDataRepository,
             networkSchedulers,
             computeSchedulers,
-            localConfiguration
+            localConfiguration,
+            modelVersion
         ) as T
     }
 }

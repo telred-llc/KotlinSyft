@@ -1,4 +1,5 @@
 include ':demo-app'
 include ':syftlib'
+include ':jvm-0.0.8'
 
 rootProject.name = 'KotlinSyft'

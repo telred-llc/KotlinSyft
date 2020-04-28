@@ -9,4 +9,9 @@
     <string name="previous">Previous</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="gateway_url">Gateway URL: pygrid.openmined.xyz</string>
+    <string name="model_name">Model Name: MINST</string>
+    <string name="start_federation_training">Start Federation Training</string>
+    <string name="model_version">Model version</string>
+    <string name="app_description">KotlinSyft Demo</string>
 </resources>

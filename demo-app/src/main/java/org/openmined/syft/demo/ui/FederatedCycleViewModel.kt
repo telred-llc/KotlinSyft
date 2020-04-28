@@ -23,13 +23,14 @@ class FederatedCycleViewModel(
     private val mnistDataRepository: MNISTDataRepository,
     networkSchedulers: ProcessSchedulers,
     computeSchedulers: ProcessSchedulers,
-    private val localConfiguration: LocalConfiguration
+    private val localConfiguration: LocalConfiguration,
+    modelVersion : String
 ) : ViewModel() {
     private val syftWorker = Syft.getInstance(
         baseUrl, authToken,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist", "1.0.0")
+    private val mnistJob = syftWorker.newJob("mnist", modelVersion)
 
     val logger
         get() = _logger
@@ -39,9 +40,12 @@ class FederatedCycleViewModel(
         get() = _processState
     private val _processState = MutableLiveData<ProcessState>()
 
-    val processData
-        get() = _processData
-    private val _processData = MutableLiveData<ProcessData>()
+    val processDataLoss
+        get() = _processDataLoss
+    private val _processDataLoss = MutableLiveData<ProcessData>()
+    val processDataAcc
+        get() = _processDataAcc
+    private val _processDataAcc = MutableLiveData<ProcessData>()
 
     fun startCycle() {
         postLog("MNIST job started")
@@ -75,12 +79,14 @@ class FederatedCycleViewModel(
     ) {
 
         plans.values.first().let { plan ->
-            val result = mutableListOf<Float>()
+            val resultLoss = mutableListOf<Float>()
+            val resultAcc = mutableListOf<Float>()
             val loadData = mnistDataRepository.loadData()
             val zipData = loadData.first zip loadData.second
             repeat(EPOCHS) {epoch->
                 postLog("Starting epoch ${epoch + 1}")
-                val temp_re = mutableListOf<Float>()
+                val temp_re_loss = mutableListOf<Float>()
+                val temp_re_acc = mutableListOf<Float>()
                 zipData.forEach { trainingBatch ->
                     val output = plan.execute(
                         model,
@@ -93,12 +99,15 @@ class FederatedCycleViewModel(
                         val updatedParams =
                                 outputResult.slice(beginIndex until 5)
                         model.updateModel(updatedParams.map { it.toTensor() })
-                        temp_re.add(outputResult[1].toTensor().dataAsFloatArray.last())
+                        temp_re_loss.add(outputResult[0].toTensor().dataAsFloatArray.last())
+                        temp_re_acc.add(outputResult[1].toTensor().dataAsFloatArray.last())
                     } ?: postLog("the model returned empty array")
                 }
-                result.add(temp_re.sum())
+                resultLoss.add(temp_re_loss.sum())
+                resultAcc.add(temp_re_acc.sum())
                 postState(ProcessState.Hidden)
-                postData(result)
+                postDataLoss(resultLoss)
+                postDataAcc(resultAcc)
             }
             postLog("Training done!")
 
@@ -110,8 +119,12 @@ class FederatedCycleViewModel(
         _processState.postValue(state)
     }
 
-    private fun postData(result: List<Float>) {
-        _processData.postValue(ProcessData(result))
+    private fun postDataLoss(result: List<Float>) {
+        _processDataLoss.postValue(ProcessData(result))
+    }
+
+    private fun postDataAcc(result: List<Float>) {
+        _processDataAcc.postValue(ProcessData(result))
     }
 
     private fun postLog(message: String) {
