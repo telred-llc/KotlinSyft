@@ -7,7 +7,9 @@ import org.openmined.syft.demo.domain.MNISTDataRepository
 import org.openmined.syft.domain.LocalConfiguration
 import org.openmined.syft.execution.JobStatusSubscriber
 import org.openmined.syft.execution.Plan
+import org.openmined.syft.execution.SyftJob
 import org.openmined.syft.networking.datamodels.ClientConfig
+import org.openmined.syft.proto.State
 import org.openmined.syft.proto.SyftModel
 import org.openmined.syft.threading.ProcessSchedulers
 import java.util.concurrent.ConcurrentHashMap
@@ -30,7 +32,7 @@ class FederatedCycleViewModel(
         baseUrl, authToken,
         networkSchedulers, computeSchedulers
     )
-    private val mnistJob = syftWorker.newJob("mnist", modelVersion)
+    private var mnistJob : SyftJob? = null//= syftWorker.newJob("mnist", modelVersion)
 
     val logger
         get() = _logger
@@ -47,7 +49,10 @@ class FederatedCycleViewModel(
         get() = _processDataAcc
     private val _processDataAcc = MutableLiveData<ProcessData>()
 
+    private val _modelVersion = modelVersion
+
     fun startCycle() {
+        mnistJob = syftWorker.newJob("mnist", _modelVersion)
         postLog("MNIST job started")
         postState(ProcessState.Loading)
         val jobStatusSubscriber = object : JobStatusSubscriber() {
@@ -69,7 +74,7 @@ class FederatedCycleViewModel(
                 postLog("There was an error $throwable")
             }
         }
-        mnistJob.start(jobStatusSubscriber)
+        mnistJob?.start(jobStatusSubscriber)
     }
 
     private fun trainingProcess(
@@ -110,9 +115,22 @@ class FederatedCycleViewModel(
                 postDataAcc(resultAcc)
             }
             postLog("Training done!")
-
+            model.modelState?.let { reportResult(it) }
         }
+    }
 
+    private fun reportResult(state : State){
+        val jobStatusSubscriber = object : JobStatusSubscriber(){
+            override fun onComplete() {
+                postLog("Report successfully")
+                startCycle()
+            }
+
+            override fun onError(throwable: Throwable) {
+                throwable.message?.let { postLog(it) }
+            }
+        }
+        mnistJob?.report(state, jobStatusSubscriber)
     }
 
     private fun postState(state: ProcessState) {

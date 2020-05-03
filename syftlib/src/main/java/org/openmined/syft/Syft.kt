@@ -42,7 +42,7 @@ class Syft internal constructor(
                 INSTANCE ?: synchronized(this) {
                     INSTANCE ?: Syft(
                         authToken,
-                        SocketClient(baseUrl, 2000u, networkingSchedulers),
+                        SocketClient(baseUrl, 20000u, networkingSchedulers),
                         HttpClient(baseUrl),
                         networkingSchedulers,
                         computeSchedulers
@@ -61,6 +61,7 @@ class Syft internal constructor(
         model: String,
         version: String? = null
     ): SyftJob {
+        workerId = null
         val job = SyftJob(this, computeSchedulers, networkingSchedulers, model, version)
         val jobId = SyftJob.JobID(model, version)
         workerJobs[jobId] = job

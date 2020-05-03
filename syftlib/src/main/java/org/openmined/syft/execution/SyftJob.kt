@@ -1,8 +1,10 @@
 package org.openmined.syft.execution
 
+import android.util.Base64
 import android.util.Log
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.functions.Consumer
 import io.reactivex.processors.PublishProcessor
 import okhttp3.ResponseBody
 import org.openmined.syft.Syft
@@ -133,7 +135,13 @@ class SyftJob(
                     { successMsg: String ->
                         Log.d(TAG, successMsg)
                         trainingParamsStatus.set(DownloadStatus.COMPLETE)
-                        jobStatusProcessor.offer(JobStatusMessage.JobReady(model, plans, clientConfig))
+                        jobStatusProcessor.offer(
+                            JobStatusMessage.JobReady(
+                                model,
+                                plans,
+                                clientConfig
+                            )
+                        )
                     },
                     { e -> jobStatusProcessor.onError(e) }
                 )
@@ -144,9 +152,10 @@ class SyftJob(
     /**
      * report the results back to PyGrid
      */
-    fun report(diff: State) {
+    fun report(diff: State, subscriber: JobStatusSubscriber) {
         val requestKey = requestKey
         val workerId = worker.getSyftWorkerId()
+        val data = Base64.encodeToString(diff.serialize().toByteArray(), Base64.DEFAULT)
         if (requestKey != null && workerId != null)
             compositeDisposable.add(
                 worker.getSignallingClient()
@@ -156,13 +165,17 @@ class SyftJob(
                                 requestKey,
                                 //todo this should be sent via post call on http client
                                 //todo Not yet yet decided on pygrid
-                                diff.serialize().toString()
+//                                diff.serialize().toString()
+                                data
                             )
                         )
                         .compose(networkingSchedulers.applySingleSchedulers())
-                        .subscribe { reportResponse: ReportResponse ->
-                            Log.i(TAG, reportResponse.status)
+                        .subscribe(Consumer { t ->
+                            subscriber.onComplete()
+                        }, Consumer { t ->
+                            subscriber.onError(t)
                         })
+            )
     }
 
     //We might want to make these public if needed later
